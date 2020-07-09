@@ -1,0 +1,79 @@
+---
+version: '3.4'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: always    
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+      - 7072:7072
+    volumes:
+        - ./kafka:/agent
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OPTS: -javaagent:/agent/jmx_prometheus_javaagent-0.13.0.jar=7072:/agent/kafka-jmx.yml
+       
+  # kafka-exporter:
+  #   image: danielqsj/kafka-exporter
+  #   restart: always
+  #   depends_on:
+  #     - kafka
+  #     - zookeeper
+  #     - prometheus
+  #   ports:
+  #     - 9308:9308
+  #   command: --kafka.server=kafka:29092
+
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/conf:/etc/prometheus
+      - ./prometheus/data:/prometheus
+
+  grafana:
+      image: grafana/grafana
+      depends_on:
+        - prometheus      
+      ports:
+        - "3000:3000"
+      volumes:
+        - ./grafana:/var/lib/grafana
+
+  # netdata:
+  #     image: netdata/netdata
+  #     ports:
+  #       - 19999:19999
+  #     cap_add:
+  #       - SYS_PTRACE
+  #     security_opt:
+  #       - apparmor:unconfined
+  #     volumes:
+  #       - ./netdata/proc:/host/proc:ro
+  #       - ./netdata/sys:/host/sys:ro
+  #       - ./netdata/var/run/docker.sock:/var/run/docker.sock:ro
+
+
+secrets:
+  prometheus.yml:
+    file: prometheus.yml
+    
+networks:
+  internal:
+    driver: bridge

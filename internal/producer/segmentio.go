@@ -12,7 +12,7 @@ type segmentioProducer struct {
 	producer  *kafka.Writer
 }
 
-// NewSegmentioProducer Create new Sarama Producer
+// NewSegmentioProducer Create new Segmentio Producer
 func NewSegmentioProducer(kafkaURLs []string, topic string) (Producer, error) {
 	prc := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  kafkaURLs,

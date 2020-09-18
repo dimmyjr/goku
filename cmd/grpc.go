@@ -29,8 +29,8 @@ func Start(kafkaURL, topic, provider, grpcPort string) {
 		log.Fatalf("Provider invalid: %v", err)
 	}
 
-	producer, err := publisher.NewProducer([]string{kafkaURL}, topic+"-sarama", prv)
-	defer producer.Close()
+	prdc, err := publisher.NewProducer([]string{kafkaURL}, topic+"-sarama", prv)
+	defer prdc.Close()
 
 	if err != nil {
 		log.Fatalf("Error create producer: %v", err)

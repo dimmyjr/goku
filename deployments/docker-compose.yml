@@ -76,4 +76,4 @@ secrets:
     
 networks:
   internal:
-    driver: bridge
+    driver: host

@@ -55,13 +55,13 @@ func NewProducer(kafkaURLs []string, topic string, provider *types.Provider) (pr
 		}, err
 	}
 
-	return nil, errors.New("Invalid Provider to Producer")
+	return nil, errors.New("invalid Provider to Producer")
 }
 
 func (pbs publisher) Publish(key, message string) error {
 	start := time.Now()
 	defer func() {
-		time := float64(time.Since(start).Seconds())
+		time := time.Since(start).Seconds()
 		prv := fmt.Sprintf("%v", pbs.provider)
 		histogram.WithLabelValues(prv).Observe(time)
 		log.WithFields(log.Fields{

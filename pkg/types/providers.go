@@ -20,7 +20,7 @@ func GetProvider(input string) (*Provider, error) {
 	case Sarama, Segmentio, Confluent:
 		return &p, nil
 	default:
-		return nil, errors.New("Invalid leave type")
+		return nil, errors.New("invalid leave type")
 	}
 
 }

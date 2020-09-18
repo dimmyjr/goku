@@ -1,19 +1,38 @@
-.history/
-deployments/prometheus/data/
-GoKafka
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
 
-# Test binary, built with `go test -c`
-*.test
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+### VS Code ###
+.vscode/
+/y/
+/.history/
+/GoKafka
+/deployments/prometheus/data/
+publisher/

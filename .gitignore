@@ -36,3 +36,4 @@ out/
 /GoKafka
 /deployments/prometheus/data/
 publisher/
+/kafka/prometheus/data/

@@ -23,7 +23,7 @@ func init() {
 	histogram = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: "kafka_consumer",
-			Name:      "consumer",
+			Name:      "producer",
 			Help:      "Consumer execution in seconds",
 			Buckets:   prometheus.DefBuckets,
 		}, []string{"name"})
@@ -31,7 +31,7 @@ func init() {
 	prometheus.Register(histogram)
 }
 
-//NewConsumer create a new consumer
+//NewConsumer create a new producer
 func NewConsumer(kafkaURLs []string, topic, groupID string, provider *types.Provider) (consumer.Consumer, error) {
 	switch *provider {
 	case types.Sarama:
@@ -61,13 +61,13 @@ func NewConsumer(kafkaURLs []string, topic, groupID string, provider *types.Prov
 func (pbs subscriber) Subscribe(f func(message consumer.Message) error) {
 	start := time.Now()
 	defer func() {
-		time := time.Since(start).Seconds()
+		seconds := time.Since(start).Seconds()
 		prv := fmt.Sprintf("%v", pbs.provider)
-		histogram.WithLabelValues(prv).Observe(time)
+		histogram.WithLabelValues(prv).Observe(seconds)
 		log.WithFields(log.Fields{
 			"provider": prv,
-			"total":    time,
-		}).Info("consumer time")
+			"total":    seconds,
+		}).Info("producer seconds")
 	}()
 
 	pbs.consumer.Subscribe(f)

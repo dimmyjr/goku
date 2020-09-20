@@ -2,9 +2,8 @@ package consumer
 
 import (
 	"fmt"
-	"strings"
-
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
+	"strings"
 )
 
 type confluentConsumer struct {
@@ -15,41 +14,46 @@ type confluentConsumer struct {
 
 // NewConfluentConsumer Create new Confluent Consumer
 func NewConfluentConsumer(kafkaURLs []string, topic, groupID string) (Consumer, error) {
-	//prc, err := kafka.NewConsumer(&kafka.ConfigMap{"bootstrap.servers": strings.Join(kafkaURLs, ",")})
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//go func() {
-	//	for e := range prc.Events() {
-	//		switch ev := e.(type) {
-	//		case *kafka.Message:
-	//			if ev.TopicPartition.Error != nil {
-	//				fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
-	//			}
-	//		}
-	//	}
-	//}()
-	//
-	//return confluentConsumer{
-	//	kafkaURLs: kafkaURLs,
-	//	topic:     topic,
-	//	consumer:  prc,
-	//}, nil
-	return nil, nil
-}
+	csm, err := kafka.NewConsumer(&kafka.ConfigMap{
+		"bootstrap.servers": strings.Join(kafkaURLs, ","),
+		"group.id":          groupID,
+		"auto.offset.reset": "earliest",
+	})
 
-func (con segmentioConsumer) Subscribe(f func(message Message) error) {
-	//msg := &kafka.Message{
-	//	Key:            []byte(key),
-	//	TopicPartition: kafka.TopicPartition{Topic: &prd.topic, Partition: kafka.PartitionAny},
-	//	Value:          []byte(message),
-	//}
-	//err := prd.consumer.Produce(msg, nil)
-	//prd.consumer.Flush(100)
+	if err != nil {
+		return nil, err
+	}
+
+	return confluentConsumer{
+		kafkaURLs: kafkaURLs,
+		topic:     topic,
+		consumer:  csm,
+	}, nil
 
 }
 
-func (prd confluentConsumer) Close() {
-	_ = prd.consumer.Close()
+func (con confluentConsumer) Subscribe(f func(message Message) error) {
+	_ = con.consumer.SubscribeTopics([]string{con.topic, "^aRegex.*[Tt]opic"}, nil)
+	go func() {
+		for {
+			msg, err := con.consumer.ReadMessage(-1)
+			if err == nil {
+				f(Message{
+					Topic:     con.topic,
+					Partition: msg.TopicPartition.Partition,
+					Offset:    int64(msg.TopicPartition.Offset),
+					Key:       msg.Key,
+					Value:     msg.Value,
+					//Headers:   msg.Headers,
+					Time: msg.Timestamp,
+				})
+			} else {
+				fmt.Printf("Consumer error: %v (%v)\n", err, msg)
+			}
+		}
+	}()
+}
+
+func (con confluentConsumer) Close() {
+	_ = con.consumer.Close()
 }

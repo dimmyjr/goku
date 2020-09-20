@@ -15,7 +15,7 @@ type Message struct {
 	Topic string
 
 	// Partition is reads only and MUST NOT be set when writing messages
-	Partition int
+	Partition int32
 	Offset    int64
 	Key       []byte
 	Value     []byte

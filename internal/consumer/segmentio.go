@@ -31,21 +31,23 @@ func NewSegmentioConsumer(kafkaURLs []string, topic, groupID string) (Consumer, 
 }
 
 func (con segmentioConsumer) Subscribe(f func(message Message) error) {
-	for {
-		m, err := con.consumer.ReadMessage(context.Background())
-		if err != nil {
-			break
+	go func() {
+		for {
+			m, err := con.consumer.ReadMessage(context.Background())
+			if err != nil {
+				break
+			}
+			_ = f(Message{
+				Topic:     m.Topic,
+				Partition: int32(m.Partition),
+				Offset:    m.Offset,
+				Key:       m.Key,
+				Value:     m.Value,
+				//Headers:   m.Headers,
+				Time: m.Time,
+			})
 		}
-		_ = f(Message{
-			Topic:     m.Topic,
-			Partition: m.Partition,
-			Offset:    m.Offset,
-			Key:       m.Key,
-			Value:     m.Value,
-			//Headers:   m.Headers,
-			Time: m.Time,
-		})
-	}
+	}()
 }
 
 func (con segmentioConsumer) Close() {

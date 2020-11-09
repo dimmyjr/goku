@@ -2,18 +2,20 @@ package consumer
 
 import (
 	"context"
-	"github.com/Shopify/sarama"
+	"fmt"
 	"log"
 	"os"
+
+	"github.com/Shopify/sarama"
 )
 
-type saramaConsumer struct {
+type SaramaConsumer struct {
 	kafkaURLs []string
 	topic     string
 	consumer  sarama.ConsumerGroup
 }
 
-// ConsumerGroupHandler represents the sarama consumer group
+// ConsumerGroupHandler represents the sarama consumer group.
 type GroupHandler struct {
 	f func(message Message) error
 }
@@ -36,17 +38,18 @@ func (h GroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sa
 			Offset:    msg.Offset,
 			Key:       msg.Key,
 			Value:     msg.Value,
-			//Headers:   nil,
-			Time: msg.Timestamp,
+			Headers:   header(msg.Headers),
+			Time:      msg.Timestamp,
 		})
+
 		session.MarkMessage(msg, "")
 	}
 
 	return nil
 }
 
-// NewSaramaConsumer Create new Sarama Consumer
-func NewSaramaConsumer(kafkaURLs []string, topic, groupID string) (Consumer, error) {
+// NewSaramaConsumer Create new Sarama Consumer.
+func NewSaramaConsumer(kafkaURLs []string, topic, groupID string) (*SaramaConsumer, error) {
 	sarama.Logger = log.New(os.Stdout, "", log.Ltime)
 
 	config := sarama.NewConfig()
@@ -55,24 +58,26 @@ func NewSaramaConsumer(kafkaURLs []string, topic, groupID string) (Consumer, err
 
 	con, err := sarama.NewConsumerGroup(kafkaURLs, groupID, config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error: %w", err)
 	}
 
-	return saramaConsumer{
+	return &SaramaConsumer{
 		kafkaURLs: kafkaURLs,
 		topic:     topic,
 		consumer:  con,
 	}, nil
 }
 
-func (con saramaConsumer) Subscribe(f func(message Message) error) {
-	go func() {
-		for {
-			_ = con.consumer.Consume(context.Background(), []string{con.topic}, GroupHandler{f})
-		}
-	}()
+func (sarama SaramaConsumer) Subscribe(f func(message Message) error) {
+	go sarama.readMessages(f)
 }
 
-func (con saramaConsumer) Close() {
-	_ = con.consumer.Close()
+func (sarama SaramaConsumer) readMessages(f func(message Message) error) {
+	for {
+		_ = sarama.consumer.Consume(context.Background(), []string{sarama.topic}, GroupHandler{f})
+	}
+}
+
+func (sarama SaramaConsumer) Close() {
+	_ = sarama.consumer.Close()
 }

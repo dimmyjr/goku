@@ -3,26 +3,32 @@ package main
 import (
 	_ "expvar"
 	"flag"
+	"log"
 	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	server "github.com/dimmyjr/GoKafka/cmd"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var kafkaURL, topic, provider, grpcPort, prometheusPort string
+func main() {
+	var kafkaURL, topic, provider, grpcPort, prometheusPort string
 
-func init() {
 	flag.StringVar(&kafkaURL, "kafkaURL", "", "Kafka Url")
 	flag.StringVar(&topic, "topic", "", "Topic Name")
 	flag.StringVar(&provider, "provider", "", "confluent, sarama, segmentio")
 	flag.StringVar(&grpcPort, "grpcPort", "", "gRPC Port")
 	flag.StringVar(&prometheusPort, "prometheusPort", "", "Prometheus Port")
 	flag.Parse()
+
+	http.Handle("/metrics", promhttp.Handler())
+
+	go prometheus(prometheusPort)
+	server.Start(kafkaURL, topic, provider, grpcPort)
 }
 
-func main() {
-	http.Handle("/metrics", promhttp.Handler())
-	go http.ListenAndServe(":"+prometheusPort, nil)
-	server.Start(kafkaURL, topic, provider, grpcPort)
+func prometheus(prometheusPort string) {
+	err := http.ListenAndServe(":"+prometheusPort, nil)
+	if err != nil {
+		log.Fatal("Error to initialize prometheus metrics")
+	}
 }

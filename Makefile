@@ -1,3 +1,18 @@
+clean:
+	rm goku.out
+
+build:
+	@go mod tidy
+	@go build -o goku.out
+
+test:
+	go test -coverprofile=cover.out fmt ./...
+	go tool cover -html=cover.out
+
+lint:
+	golangci-lint run
+	#docker run --rm -v $(shell pwd):/app -w /app golangci/golangci-lint:v1.32.2 golangci-lint run --timeout=10m
+
 generate:
 	docker run --rm -v ${CURDIR}:${CURDIR} -w ${CURDIR} znly/protoc --go_out=plugins=grpc:./server -I ${CURDIR}/proto producer.proto
 

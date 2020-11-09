@@ -1,20 +1,22 @@
 package producer
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/Shopify/sarama"
 )
 
-type saramaProducer struct {
+type SaramaProducer struct {
 	kafkaURLs []string
 	topic     string
 	producer  sarama.SyncProducer
 }
 
-// NewSaramaProducer Create new Sarama Producer
-func NewSaramaProducer(kafkaURLs []string, topic string) (Producer, error) {
+// NewSaramaProducer Create new Sarama Producer.
+func NewSaramaProducer(kafkaURLs []string, topic string) (*SaramaProducer, error) {
 	sarama.Logger = log.New(os.Stdout, "", log.Ltime)
 
 	saramaCfg := sarama.NewConfig()
@@ -23,33 +25,39 @@ func NewSaramaProducer(kafkaURLs []string, topic string) (Producer, error) {
 	saramaCfg.Producer.Return.Successes = true
 
 	prd, err := sarama.NewSyncProducer(kafkaURLs, saramaCfg)
-
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error: %w", err)
 	}
 
-	return saramaProducer{
+	return &SaramaProducer{
 		kafkaURLs: kafkaURLs,
 		topic:     topic,
 		producer:  prd,
 	}, nil
-
 }
 
-func (cfg saramaProducer) Publish(key, message string) error {
+func (saramaProducer SaramaProducer) Publish(key, message string) error {
 	msg := &sarama.ProducerMessage{
-		Topic: cfg.topic,
-		Value: sarama.StringEncoder(message),
+		Topic:     saramaProducer.topic,
+		Key:       sarama.StringEncoder(key),
+		Value:     sarama.StringEncoder(message),
+		Headers:   nil,
+		Metadata:  nil,
+		Offset:    0,
+		Partition: 0,
+		Timestamp: time.Time{},
 	}
-	_, _, err := cfg.producer.SendMessage(msg)
-
+	_, _, err := saramaProducer.producer.SendMessage(msg)
+	//golint:gofumpt
 	if err != nil {
-		return err
+		return fmt.Errorf("error: %w", err)
 	}
 
 	return nil
 }
 
-func (cfg saramaProducer) Close() {
-	cfg.producer.Close()
+func (saramaProducer SaramaProducer) Close() {
+	if saramaProducer.producer != nil {
+		_ = saramaProducer.producer.Close()
+	}
 }

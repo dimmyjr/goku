@@ -6,9 +6,9 @@ import (
 	"math/big"
 	"os/exec"
 
-	. "github.com/dimmyjr/GoKafka/internal/consumer"
-	"github.com/dimmyjr/GoKafka/pkg/subscriber"
-	"github.com/dimmyjr/GoKafka/pkg/types"
+	. "github.com/dimmyjr/goku/internal/consumer"
+	"github.com/dimmyjr/goku/pkg/subscriber"
+	"github.com/dimmyjr/goku/pkg/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

@@ -33,7 +33,7 @@ out/
 .vscode/
 /y/
 /.history/
-/GoKafka
+/goku
 /deployments/prometheus/data/
 publisher/
 /kafka/prometheus/data/

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dimmyjr/GoKafka/internal/consumer"
-	"github.com/dimmyjr/GoKafka/pkg/types"
+	"github.com/dimmyjr/goku/internal/consumer"
+	"github.com/dimmyjr/goku/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )

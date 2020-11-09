@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/dimmyjr/GoKafka/internal/producer"
-	"github.com/dimmyjr/GoKafka/pkg/publisher"
-	"github.com/dimmyjr/GoKafka/pkg/types"
+	"github.com/dimmyjr/goku/internal/producer"
+	"github.com/dimmyjr/goku/pkg/publisher"
+	"github.com/dimmyjr/goku/pkg/types"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"

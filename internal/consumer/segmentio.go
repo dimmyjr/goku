@@ -2,54 +2,77 @@ package consumer
 
 import (
 	"context"
+
 	"github.com/segmentio/kafka-go"
 )
 
-type segmentioConsumer struct {
+type SegmentioConsumer struct {
 	kafkaURLs []string
 	topic     string
 	consumer  *kafka.Reader
 }
 
-// NewSegmentioConsumer Create new Segmentio Consumer
-func NewSegmentioConsumer(kafkaURLs []string, topic, groupID string) (Consumer, error) {
-	rdr := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:        kafkaURLs,
-		GroupID:        groupID,
-		Topic:          topic,
-		Logger:         nil,
-		ErrorLogger:    nil,
-		IsolationLevel: 0,
-		MaxAttempts:    0,
+// NewSegmentioConsumer create new Segmentio Consumer.
+func NewSegmentioConsumer(kafkaURLs []string, topic, groupID string) (*SegmentioConsumer, error) {
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:                kafkaURLs,
+		GroupID:                groupID,
+		Topic:                  topic,
+		Partition:              0,
+		Dialer:                 nil,
+		QueueCapacity:          0,
+		MinBytes:               0,
+		MaxBytes:               0,
+		MaxWait:                0,
+		ReadLagInterval:        0,
+		GroupBalancers:         nil,
+		HeartbeatInterval:      0,
+		CommitInterval:         0,
+		PartitionWatchInterval: 0,
+		WatchPartitionChanges:  false,
+		SessionTimeout:         0,
+		RebalanceTimeout:       0,
+		JoinGroupBackoff:       0,
+		RetentionTime:          0,
+		StartOffset:            0,
+		ReadBackoffMin:         0,
+		ReadBackoffMax:         0,
+		Logger:                 nil,
+		ErrorLogger:            nil,
+		IsolationLevel:         0,
+		MaxAttempts:            0,
 	})
 
-	return segmentioConsumer{
+	return &SegmentioConsumer{
 		kafkaURLs: kafkaURLs,
 		topic:     topic,
-		consumer:  rdr}, nil
-
+		consumer:  reader,
+	}, nil
 }
 
-func (con segmentioConsumer) Subscribe(f func(message Message) error) {
-	go func() {
-		for {
-			m, err := con.consumer.ReadMessage(context.Background())
-			if err != nil {
-				break
-			}
-			_ = f(Message{
-				Topic:     m.Topic,
-				Partition: int32(m.Partition),
-				Offset:    m.Offset,
-				Key:       m.Key,
-				Value:     m.Value,
-				//Headers:   m.Headers,
-				Time: m.Time,
-			})
+func (segmentio SegmentioConsumer) Subscribe(f func(message Message) error) {
+	go segmentio.readMessages(f)
+}
+
+func (segmentio SegmentioConsumer) readMessages(f func(message Message) error) {
+	for {
+		m, err := segmentio.consumer.ReadMessage(context.Background())
+		if err != nil {
+			break
 		}
-	}()
+
+		_ = f(Message{
+			Topic:     m.Topic,
+			Partition: int32(m.Partition),
+			Offset:    m.Offset,
+			Key:       m.Key,
+			Value:     m.Value,
+			Headers:   header(m.Headers),
+			Time:      m.Time,
+		})
+	}
 }
 
-func (con segmentioConsumer) Close() {
-	_ = con.consumer.Close()
+func (segmentio SegmentioConsumer) Close() {
+	_ = segmentio.consumer.Close()
 }

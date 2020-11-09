@@ -1,31 +1,28 @@
 package subscriber_test
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
+	"os/exec"
+
 	. "github.com/dimmyjr/GoKafka/internal/consumer"
 	"github.com/dimmyjr/GoKafka/pkg/subscriber"
 	"github.com/dimmyjr/GoKafka/pkg/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"math/rand"
-	"os/exec"
-	"strconv"
-	"time"
 )
 
 const cmdProducer = "docker run --network host --rm confluentinc/cp-kafkacat " +
 	"bash -c \"echo '%s' | kafkacat -b localhost:9092 -K: -P  -t %s\""
 
 var _ = Describe("Subscriber", func() {
-
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	Context("To produce message to kafka local", func() {
 		kafkaURL := "localhost:9092"
 
-		It("should produce message with Segmentio", func() {
-			topic := strconv.Itoa(rand.Int()) + "-segmentio"
-			message := "testes de kafka " + strconv.Itoa(rand.Int())
+		It("should produce message with Segmentio", func() { //nolint:dupl
+			topic := randomString() + "-segmentio"
+			message := "testes de kafka " + randomString()
 			provider, _ := types.GetProvider("segmentio")
 
 			By("creating sub")
@@ -38,18 +35,18 @@ var _ = Describe("Subscriber", func() {
 
 			By("should get message produced")
 
-			c := make(chan string, 0)
+			c := make(chan string)
 			sub.Subscribe(func(input Message) error {
 				c <- string(input.Value)
+
 				return nil
 			})
 			Expect(<-c).Should(Equal(message))
-
 		})
 
-		It("should produce message with Sarama", func() {
-			topic := strconv.Itoa(rand.Int()) + "-sarama"
-			message := "testes de kafka " + strconv.Itoa(rand.Int())
+		It("should produce message with Sarama", func() { //nolint:dupl
+			topic := randomString() + "-sarama"
+			message := "testes de kafka " + randomString()
 			provider, _ := types.GetProvider("sarama")
 
 			By("creating sub")
@@ -62,18 +59,18 @@ var _ = Describe("Subscriber", func() {
 
 			By("should get message produced")
 
-			c := make(chan string, 0)
+			c := make(chan string)
 			sub.Subscribe(func(input Message) error {
 				c <- string(input.Value)
+
 				return nil
 			})
 			Expect(<-c).Should(Equal(message))
-
 		})
 
-		It("should produce message with Confluent", func() {
-			topic := strconv.Itoa(rand.Int()) + "-confluent"
-			message := "testes de kafka " + strconv.Itoa(rand.Int())
+		It("should produce message with Confluent", func() { //nolint:dupl
+			topic := randomString() + "-confluent"
+			message := "testes de kafka " + randomString()
 			provider, _ := types.GetProvider("confluent")
 
 			By("creating sub")
@@ -86,19 +83,25 @@ var _ = Describe("Subscriber", func() {
 
 			By("should get message produced")
 
-			c := make(chan string, 0)
+			c := make(chan string)
 			sub.Subscribe(func(input Message) error {
 				c <- string(input.Value)
+
 				return nil
 			})
 			Expect(<-c).Should(Equal(message))
-
 		})
-
 	})
 })
 
 func producer(topic, message string) ([]byte, error) {
 	cmd := fmt.Sprintf(cmdProducer, "1:"+message, topic)
+
 	return exec.Command("/bin/sh", "-c", cmd).Output()
+}
+
+func randomString() string {
+	n, _ := rand.Int(rand.Reader, big.NewInt(1000))
+
+	return n.String()
 }

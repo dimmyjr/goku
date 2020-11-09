@@ -1,26 +1,30 @@
 package types
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-// Provider enum
+// Provider enum.
 type Provider string
 
+var ErrUndefinedProvider = errors.New("undefinedProvider")
+
 const (
-	// Sarama provider
+	// Sarama provider.
 	Sarama Provider = "sarama"
-	// Segmentio provider
+	// Segmentio provider.
 	Segmentio Provider = "segmentio"
-	// Confluent provider
+	// Confluent provider.
 	Confluent Provider = "confluent"
 )
 
-func GetProvider(input string) (*Provider, error) {
+func GetProvider(input string) (Provider, error) {
 	p := Provider(input)
 	switch p {
 	case Sarama, Segmentio, Confluent:
-		return &p, nil
+		return p, nil
 	default:
-		return nil, errors.New("invalid leave type")
+		return "", fmt.Errorf("error: %w", ErrUndefinedProvider)
 	}
-
 }

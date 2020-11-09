@@ -1,4 +1,4 @@
-module github.com/dimmyjr/GoKafka
+module github.com/dimmyjr/goku
 
 go 1.14
 
@@ -17,4 +17,5 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/grpc v1.29.1
 	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.4.2
+	mvdan.cc/gofumpt v0.0.0-20201107090320-a024667a00f1 // indirect
 )

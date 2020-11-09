@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	server "github.com/dimmyjr/GoKafka/cmd"
+	server "github.com/dimmyjr/goku/cmd"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 

@@ -1,4 +1,4 @@
-module github.com/dimmyjr/GoKafka
+module github.com/dimmyjr/goku
 
 go 1.14
 

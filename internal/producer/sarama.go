@@ -48,7 +48,7 @@ func (saramaProducer SaramaProducer) Publish(key, message string) error {
 		Timestamp: time.Time{},
 	}
 	_, _, err := saramaProducer.producer.SendMessage(msg)
-	//golint:gofumpt
+
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dimmyjr/goku/message"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
@@ -31,13 +32,13 @@ func NewConfluentConsumer(kafkaURLs []string, topic, groupID string) (*Confluent
 	}, nil
 }
 
-func (confluent ConfluentConsumer) Subscribe(f func(message Message) error) {
+func (confluent ConfluentConsumer) Subscribe(f func(message *message.Message) error) {
 	_ = confluent.consumer.SubscribeTopics([]string{confluent.topic, "^aRegex.*[Tt]opic"}, nil)
 
 	go confluent.readMessages(f)
 }
 
-func (confluent ConfluentConsumer) readMessages(f func(message Message) error) {
+func (confluent ConfluentConsumer) readMessages(f func(message *message.Message) error) {
 	for {
 		msg, err := confluent.consumer.ReadMessage(-1)
 		if err != nil {
@@ -45,13 +46,13 @@ func (confluent ConfluentConsumer) readMessages(f func(message Message) error) {
 		}
 
 		if f != nil {
-			err = f(Message{
+			err = f(&message.Message{
 				Topic:     confluent.topic,
 				Partition: msg.TopicPartition.Partition,
 				Offset:    int64(msg.TopicPartition.Offset),
 				Key:       msg.Key,
 				Value:     msg.Value,
-				Headers:   header(msg.Headers),
+				Headers:   message.Headers(msg.Headers),
 				Time:      msg.Timestamp,
 			})
 		}

@@ -1,13 +1,14 @@
+// Supported types
 package types
 
 import (
 	"errors"
-	"fmt"
 )
 
 // Provider enum.
 type Provider string
 
+// ErrUndefinedProvider : undefined provider Error.
 var ErrUndefinedProvider = errors.New("undefinedProvider")
 
 const (
@@ -19,12 +20,6 @@ const (
 	Confluent Provider = "confluent"
 )
 
-func GetProvider(input string) (Provider, error) {
-	p := Provider(input)
-	switch p {
-	case Sarama, Segmentio, Confluent:
-		return p, nil
-	default:
-		return "", fmt.Errorf("error: %w", ErrUndefinedProvider)
-	}
+func (p Provider) String() string {
+	return string(p)
 }

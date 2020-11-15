@@ -6,9 +6,9 @@ import (
 	"math/big"
 	"os/exec"
 
-	. "github.com/dimmyjr/goku/internal/consumer"
-	"github.com/dimmyjr/goku/pkg/subscriber"
-	"github.com/dimmyjr/goku/pkg/types"
+	"github.com/dimmyjr/goku/message"
+	"github.com/dimmyjr/goku/subscriber"
+	"github.com/dimmyjr/goku/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -22,74 +22,74 @@ var _ = Describe("Subscriber", func() {
 
 		It("should produce message with Segmentio", func() { //nolint:dupl
 			topic := randomString() + "-segmentio"
-			message := "testes de kafka " + randomString()
-			provider, _ := types.GetProvider("segmentio")
+			msg := "testes de kafka " + randomString()
+			provider := types.Segmentio
 
 			By("creating sub")
 			sub, err := subscriber.NewConsumer([]string{kafkaURL}, topic, "test", provider)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("publishing message")
-			_, err = producer(topic, message)
+			_, err = producer(topic, msg)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("should get message produced")
 
 			c := make(chan string)
-			sub.Subscribe(func(input Message) error {
+			sub.Subscribe(func(input *message.Message) error {
 				c <- string(input.Value)
 
 				return nil
 			})
-			Expect(<-c).Should(Equal(message))
+			Expect(<-c).Should(Equal(msg))
 		})
 
 		It("should produce message with Sarama", func() { //nolint:dupl
 			topic := randomString() + "-sarama"
-			message := "testes de kafka " + randomString()
-			provider, _ := types.GetProvider("sarama")
+			msg := "testes de kafka " + randomString()
+			provider := types.Sarama
 
 			By("creating sub")
 			sub, err := subscriber.NewConsumer([]string{kafkaURL}, topic, "test", provider)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("publishing message")
-			_, err = producer(topic, message)
+			_, err = producer(topic, msg)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("should get message produced")
 
 			c := make(chan string)
-			sub.Subscribe(func(input Message) error {
+			sub.Subscribe(func(input *message.Message) error {
 				c <- string(input.Value)
 
 				return nil
 			})
-			Expect(<-c).Should(Equal(message))
+			Expect(<-c).Should(Equal(msg))
 		})
 
 		It("should produce message with Confluent", func() { //nolint:dupl
 			topic := randomString() + "-confluent"
-			message := "testes de kafka " + randomString()
-			provider, _ := types.GetProvider("confluent")
+			msg := "testes de kafka " + randomString()
+			provider := types.Confluent
 
 			By("creating sub")
 			sub, err := subscriber.NewConsumer([]string{kafkaURL}, topic, "test", provider)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("publishing message")
-			_, err = producer(topic, message)
+			_, err = producer(topic, msg)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("should get message produced")
 
 			c := make(chan string)
-			sub.Subscribe(func(input Message) error {
+			sub.Subscribe(func(input *message.Message) error {
 				c <- string(input.Value)
 
 				return nil
 			})
-			Expect(<-c).Should(Equal(message))
+			Expect(<-c).Should(Equal(msg))
 		})
 	})
 })

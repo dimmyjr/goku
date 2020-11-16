@@ -6,7 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	server "github.com/dimmyjr/goku/cmd"
+	"github.com/dimmyjr/goku/cmd/server"
+	"github.com/dimmyjr/goku/types"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -23,7 +24,7 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	go prometheus(prometheusPort)
-	server.Start(kafkaURL, topic, provider, grpcPort)
+	server.Start(kafkaURL, topic, grpcPort, types.Provider(provider))
 }
 
 func prometheus(prometheusPort string) {

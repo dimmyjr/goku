@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
+	kafka "gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
 type ConfluentProducer struct {

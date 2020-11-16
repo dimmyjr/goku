@@ -55,7 +55,7 @@ func (segmentio SegmentioProducer) Publish(key, message string) error {
 		Time:      time.Time{},
 	}
 	err := segmentio.producer.WriteMessages(context.Background(), msg)
-	//golint:gofumpt
+
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}

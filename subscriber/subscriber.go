@@ -1,3 +1,4 @@
+// Package subscriber implements Kafka Consumer for Go.
 package subscriber
 
 import (
@@ -6,14 +7,16 @@ import (
 	"time"
 
 	"github.com/dimmyjr/goku/internal/consumer"
-	"github.com/dimmyjr/goku/pkg/types"
+	"github.com/dimmyjr/goku/message"
+	"github.com/dimmyjr/goku/types"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
+// ErrUndefinedProvider : undefined provider error.
 var ErrUndefinedProvider = errors.New("undefinedProvider")
 
-type subscriber struct {
+type Subscriber struct {
 	histogram *prometheus.HistogramVec
 	provider  types.Provider
 	consumer  consumer.Consumer
@@ -37,11 +40,7 @@ func initPrometheus() *prometheus.HistogramVec {
 	return histogram
 }
 
-// NewConsumer create a Kafka Consumer with the chosen provider.
-// @topic[required]: existing topic in the Kafka cluster
-// @groupID: is to load balance the produced data
-//			(if the groupID is different for each consumer, each consumer will get the copy of data)
-// @provider: Sarama, Segmentio, Confluent
+// NewConsumer create a Kafka Consumer with the chosen provider
 // return: a new consumer or error.
 func NewConsumer(kafkaURLs []string, topic, groupID string, provider types.Provider) (consumer.Consumer, error) {
 	histogram := initPrometheus()
@@ -53,7 +52,7 @@ func NewConsumer(kafkaURLs []string, topic, groupID string, provider types.Provi
 			return nil, fmt.Errorf("error: %w, topic: %s, groupID: %s", err, topic, groupID)
 		}
 
-		return subscriber{
+		return &Subscriber{
 			provider:  provider,
 			consumer:  saramaConsumer,
 			histogram: histogram,
@@ -64,7 +63,7 @@ func NewConsumer(kafkaURLs []string, topic, groupID string, provider types.Provi
 			return nil, fmt.Errorf("error: %w, topic: %s, groupID: %s", err, topic, groupID)
 		}
 
-		return subscriber{
+		return &Subscriber{
 			provider:  provider,
 			consumer:  segmentioConsumer,
 			histogram: histogram,
@@ -76,7 +75,7 @@ func NewConsumer(kafkaURLs []string, topic, groupID string, provider types.Provi
 			return nil, fmt.Errorf("error: %w, topic: %s, groupID: %s", err, topic, groupID)
 		}
 
-		return subscriber{
+		return &Subscriber{
 			provider:  provider,
 			consumer:  confluentConsumer,
 			histogram: histogram,
@@ -91,15 +90,15 @@ func NewConsumer(kafkaURLs []string, topic, groupID string, provider types.Provi
 }
 
 // Subscribe reads and return the message from the Topic.
-func (service subscriber) Subscribe(f func(message consumer.Message) error) {
-	defer service.trace(time.Now())
-	service.consumer.Subscribe(f)
+func (s Subscriber) Subscribe(f func(message *message.Message) error) {
+	defer s.trace(time.Now())
+	s.consumer.Subscribe(f)
 }
 
-func (service subscriber) trace(start time.Time) {
+func (s Subscriber) trace(start time.Time) {
 	seconds := time.Since(start).Seconds()
-	prv := fmt.Sprintf("%v", service.provider)
-	service.histogram.WithLabelValues(prv).Observe(seconds)
+	prv := fmt.Sprintf("%v", s.provider)
+	s.histogram.WithLabelValues(prv).Observe(seconds)
 	log.WithFields(log.Fields{
 		"provider": prv,
 		"total":    seconds,
@@ -107,6 +106,6 @@ func (service subscriber) trace(start time.Time) {
 }
 
 // Close finish consumer and stop read messages.
-func (service subscriber) Close() {
-	service.consumer.Close()
+func (s Subscriber) Close() {
+	s.consumer.Close()
 }

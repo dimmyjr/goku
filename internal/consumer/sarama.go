@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Shopify/sarama"
+	"github.com/dimmyjr/goku/message"
 )
 
 type SaramaConsumer struct {
@@ -17,7 +18,7 @@ type SaramaConsumer struct {
 
 // ConsumerGroupHandler represents the sarama consumer group.
 type GroupHandler struct {
-	f func(message Message) error
+	f func(message *message.Message) error
 }
 
 func (h GroupHandler) Setup(session sarama.ConsumerGroupSession) error {
@@ -32,13 +33,13 @@ func (h GroupHandler) Cleanup(session sarama.ConsumerGroupSession) error {
 // do with the message. In this example the message will be logged with the topic name, partition and message value.
 func (h GroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		_ = h.f(Message{
+		_ = h.f(&message.Message{
 			Topic:     msg.Topic,
 			Partition: msg.Partition,
 			Offset:    msg.Offset,
 			Key:       msg.Key,
 			Value:     msg.Value,
-			Headers:   header(msg.Headers),
+			Headers:   message.Headers(msg.Headers),
 			Time:      msg.Timestamp,
 		})
 
@@ -68,11 +69,11 @@ func NewSaramaConsumer(kafkaURLs []string, topic, groupID string) (*SaramaConsum
 	}, nil
 }
 
-func (sarama SaramaConsumer) Subscribe(f func(message Message) error) {
+func (sarama SaramaConsumer) Subscribe(f func(message *message.Message) error) {
 	go sarama.readMessages(f)
 }
 
-func (sarama SaramaConsumer) readMessages(f func(message Message) error) {
+func (sarama SaramaConsumer) readMessages(f func(message *message.Message) error) {
 	for {
 		_ = sarama.consumer.Consume(context.Background(), []string{sarama.topic}, GroupHandler{f})
 	}

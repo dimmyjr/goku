@@ -1,17 +1,22 @@
 clean:
-	rm goku.out
+	@rm -rf goku.out
+	@rm -rf cover.out
 
 build:
-	@go mod tidy
-	@go build -o goku.out
+	@go env
+	@go build -v
 
 test:
-	go test -coverprofile=cover.out fmt ./...
-	go tool cover -html=cover.out
+	@go test -coverprofile=cover.out fmt ./...
+	@go tool cover -html=cover.out
 
 lint:
 	golangci-lint run
-	#docker run --rm -v $(shell pwd):/app -w /app golangci/golangci-lint:v1.32.2 golangci-lint run --timeout=10m
+	@#docker run --rm -v $(shell pwd):/app -w /app golangci/golangci-lint:v1.32.2 golangci-lint run --timeout=10m
+
+gocker:
+	docker run -it --rm -v $(shell pwd):/usr/src/myapp -w /usr/src/myapp golang:1.13.15 bash
+#	docker run -it --rm -v $(shell pwd):/usr/src/myapp -w /usr/src/myapp ubuntu:latest bash
 
 generate:
 	docker run --rm -v ${CURDIR}:${CURDIR} -w ${CURDIR} znly/protoc --go_out=plugins=grpc:./server -I ${CURDIR}/proto producer.proto
@@ -19,8 +24,11 @@ generate:
 install-ghz:
 	brew install ghz
 
-install-librdkafka:
+install-librdkafka-macos:
 	brew install librdkafka
+
+install-librdkafka-linux:
+	apt-get update && apt-get install build-essential pkg-config git librdkafka-dev -ygo
 
 start-server:
 	go run ./main.go -kafkaURL=localhost:9092 -topic=goku-sarama -provider=sarama -grpcPort=50051 -prometheusPort=8080

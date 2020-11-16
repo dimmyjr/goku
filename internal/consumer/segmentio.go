@@ -3,6 +3,7 @@ package consumer
 import (
 	"context"
 
+	"github.com/dimmyjr/goku/message"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -50,24 +51,24 @@ func NewSegmentioConsumer(kafkaURLs []string, topic, groupID string) (*Segmentio
 	}, nil
 }
 
-func (segmentio SegmentioConsumer) Subscribe(f func(message Message) error) {
+func (segmentio SegmentioConsumer) Subscribe(f func(message *message.Message) error) {
 	go segmentio.readMessages(f)
 }
 
-func (segmentio SegmentioConsumer) readMessages(f func(message Message) error) {
+func (segmentio SegmentioConsumer) readMessages(f func(message *message.Message) error) {
 	for {
 		m, err := segmentio.consumer.ReadMessage(context.Background())
 		if err != nil {
 			break
 		}
 
-		_ = f(Message{
+		_ = f(&message.Message{
 			Topic:     m.Topic,
 			Partition: int32(m.Partition),
 			Offset:    m.Offset,
 			Key:       m.Key,
 			Value:     m.Value,
-			Headers:   header(m.Headers),
+			Headers:   message.Headers(m.Headers),
 			Time:      m.Time,
 		})
 	}
